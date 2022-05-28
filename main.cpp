@@ -1,7 +1,7 @@
 #include <iostream>
 #include "queue.h"
 #include <thread>
-#include "nserver.h"
+#include "application .h"
 #include "defines.h"
 #include "nanolog.hpp"
 #include <memory>
@@ -20,7 +20,7 @@ int main() {
 
     nanolog::Logger::initialize(nanolog::GuaranteedLogger(), cfg.at("log_path"), cfg.at("log_name"), cfg.at("log_roll_size"));
 
-    Nserver &inst = Nserver::instance();
+    Application &inst = Application::instance();
     inst.set_context([](const RequestDeliver& req)->bool{
 
         auto rsp = std::make_unique<ResponseDeliver>(req.get_owner());
