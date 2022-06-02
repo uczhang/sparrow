@@ -11,6 +11,7 @@ include_directories(asio/include)
 include_directories(json)
 include_directories(util)
 include_directories(net)
+include_directories(dao)
 include_directories(src)
 
 
@@ -39,7 +40,14 @@ add_executable(chameleon
         src/application.h
         util/singleton.h
         src/application.cpp
-        net/constant.h)
+        net/constant.h
+        dao/dao.h
+        dao/db_link_pool.h
+        dao/field.cpp
+        dao/field.h
+        dao/field.cpp
+        dao/mysql_db.cpp
+        dao/mysql_db.h)
 
 
 target_link_libraries(chameleon pthread)
