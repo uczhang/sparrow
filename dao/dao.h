@@ -10,27 +10,27 @@
 
 class Dao final {
 public:
-    Dao():m_conn(LinkPool<Mysql>::instance().get_link()), m_guard(m_conn)
-    {
-        if(!m_conn){
+    Dao():m_conn(LinkPool<Mysql>::instance().get_link()){
+        if(!m_conn.get()){
+            std::cout << "link is nullptr" << std::endl;
             LOG_WARN << "db get connection failed";
         }
     }
 
-    bool is_open() const {
-        return m_conn != nullptr;
+    bool is_open(){
+        return m_conn.get() != nullptr;
     }
 
     template<typename T> auto query(const std::string& sql){
-        return m_conn->template query<T>(sql);
+        return m_conn.get()->template query<T>(sql);
     }
 
     //non query sql, such as update, delete, insert
     bool execute(const std::string& sql) {
-        if (!m_conn)
+        if (!m_conn.get())
             return false;
 
-        bool r = m_conn->execute(sql);
+        bool r = m_conn.get()->execute(sql);
         if (!r) {
             LOG_WARN << "insert role failed";
             return false;
@@ -39,21 +39,21 @@ public:
     }
 
     bool begin() {
-        if(!m_conn)
+        if(!m_conn.get())
             return false;
-        return m_conn->begin();
+        return m_conn.get()->begin();
     }
 
     bool rollback() {
-        if(!m_conn)
+        if(!m_conn.get())
             return false;
-        return m_conn->rollback();
+        return m_conn.get()->rollback();
     }
 
     bool commit() {
-        if(!m_conn)
+        if(!m_conn.get())
             return false;
-        return m_conn->commit();
+        return m_conn.get()->commit();
     }
 
     static void init(int max_conns, const std::string &ip, const std::string &usr, const std::string &pwd, int port = 3306, const char* db_name = nullptr, int timeout = 1) {
@@ -64,8 +64,7 @@ private:
     Dao(const Dao&) = delete;
     Dao& operator= (const Dao&) = delete;
 
-    std::shared_ptr<Mysql> m_conn;
-    LinkGuard<Mysql> m_guard;
+    LinkGuard<Mysql> m_conn;
 };
 
 #endif //CHAMELEON_DAO_H

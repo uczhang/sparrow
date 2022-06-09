@@ -144,6 +144,9 @@ public:
         return m_latest_time;
     }
 
+    bool has_error(){
+        return m_db_err == 0 ? false : true;
+    }
 private:
     bool mysql_options_set();
 
@@ -160,7 +163,10 @@ private:
     }
 
 private:
-    std::unique_ptr<MYSQL_RES> m_res;
+    static inline auto res_free = [](MYSQL_RES *r) {
+        mysql_free_result(r);
+    };
+    std::unique_ptr<MYSQL_RES, decltype(res_free)> m_res{nullptr, res_free};
     MYSQL_ROW m_row;
     int m_res_num;
     bool m_need_free;

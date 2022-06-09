@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <iostream>
 #include "mysql_db.h"
 #include "mysqld_error.h"
 
@@ -67,6 +67,7 @@ int Mysql::close(){
     if(m_connected){
         mysql_close(m_mysql.get());
         m_connected = false;
+        std::cout << "-----------Mysql::close()------" << std::endl;
     }
     return 0;
 }
@@ -146,7 +147,8 @@ bool Mysql::use_result() {
     if(m_res_num < 0){
         m_db_err = mysql_errno(m_mysql.get());
         m_db_err_msg= mysql_error(m_mysql.get());
-        mysql_free_result(m_res.get());
+        //mysql_free_result(m_res.get());
+        m_res.release();
         close();
         return false;
     }
@@ -159,17 +161,22 @@ int Mysql::fetch_row(){
     m_row = mysql_fetch_row(m_res.get());
     if(m_row == nullptr){
         m_db_err = mysql_errno(m_mysql.get());
-        m_db_err_msg= mysql_error(m_mysql.get());
-        mysql_free_result(m_res.get());
-        close();
-        return -1;
+        if(m_db_err != 0){
+            m_db_err_msg= mysql_error(m_mysql.get());
+            //mysql_free_result(m_res.get());
+            m_res.release();
+            close();
+            return -1;
+        }
+        return 1;
     }
     return 0;
 }
 
 int Mysql::free_result() {
     if(m_need_free){
-        mysql_free_result(m_res.get());
+        //mysql_free_result(m_res.get());
+        m_res.release();
         m_need_free = false;
     }
     return 0;

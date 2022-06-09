@@ -12,6 +12,7 @@
 #include <string>
 #include <tuple>
 #include "singleton.h"
+#include "iostream"
 
 template<typename T> class LinkPool: public Singleton<LinkPool<T>>{
 public:
@@ -25,7 +26,7 @@ public:
         while(m_pool.empty()) {
             if (m_condition.wait_for(locker, std::chrono::seconds(2), [this](){
                 return !m_pool.empty();
-            }) == std::cv_status::timeout) {
+            }) == false) {
                 return nullptr;
             }
         }
@@ -50,6 +51,7 @@ public:
 
     void return_back(std::shared_ptr<T> link){
         if(link == nullptr || link->has_error()){
+            std::cout << "return_back nullptr" << std::endl;
             link = create_link();
         }
         std::unique_lock<std::mutex> locker(m_mutex);
@@ -74,8 +76,8 @@ private:
 
     auto create_link(){
         auto link = std::make_shared<T>();
-        return std::apply([link](auto&& ...params)->bool {
-            return link->connect(std::forward<params>...);
+        return std::apply([link](auto ...params)->bool {
+            return link->connect(params...);
         }, m_args) ? link : nullptr;
     }
 
@@ -96,10 +98,14 @@ template<typename T> class LinkGuard{
 public:
     LinkGuard(std::shared_ptr<T> link) : m_link(link){}
     ~LinkGuard(){
-        LinkPool<T>::instance().return_back(m_link.lock());
+        LinkPool<T>::instance().return_back(m_link);
+    }
+
+    std::shared_ptr<T>& get(){
+        return m_link;
     }
 private:
-    std::weak_ptr<T> m_link;
+    std::shared_ptr<T> m_link;
 };
 
 #endif //CHAMELEON_DB_LINK_POOL_H
