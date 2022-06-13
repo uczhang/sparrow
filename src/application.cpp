@@ -245,6 +245,53 @@ std::unique_ptr<Response> Application::handle_from_audit_response(std::shared_pt
     return msg;
 }
 
+void Application::handle_signals(const std::error_code& error, int signal_number){
+    if (!error){
+        switch (signal_number) {
+            case SIGINT:
+            case SIGTERM:
+            case SIGPIPE:
+            {
+                std::cout << "ignore signal " << signal_number << std::endl;
+                break;
+            }
+            case SIGHUP:
+            {
+                std::cout << "SIGHUP signal need processing" << signal_number << std::endl;
+                m_service.stop();
+                break;
+            }
+        }
+    }
+    m_signals.async_wait([this](const std::error_code& error , int signal_number ){
+        handle_signals(error, signal_number);
+    });
+}
+
+void Application::start(){
+
+    //处理信号
+    m_signals.add(SIGTERM);
+    m_signals.add(SIGINT);
+    m_signals.add(SIGPIPE);
+    m_signals.add(SIGHUP);
+
+    m_signals.async_wait([this](const std::error_code& error , int signal_number ){
+        handle_signals(error, signal_number);
+    });
+
+    //网络客户端启动
+    m_audit_client->start();
+
+    //网络服务端启动
+    m_server->start();
+
+    //模块流程初始化
+    //Filter::instance().init();
+
+    m_service.run();
+}
+
 bool send_adt_msg(std::unique_ptr<RequestAudit> &req){
     Application::instance().handle_to_audit_request(std::move(req));
     return true;
