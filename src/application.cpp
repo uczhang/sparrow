@@ -258,7 +258,7 @@ void Application::handle_signals(const std::error_code& error, int signal_number
             case SIGHUP:
             {
                 std::cout << "SIGHUP signal need processing" << signal_number << std::endl;
-                m_service.stop();
+                //dump_struct(); 导出业务逻辑内存结构，方便排查问题
                 break;
             }
         }
