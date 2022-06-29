@@ -29,6 +29,13 @@ public:
     MsgBuffer(const MsgBuffer&) = default;
     MsgBuffer& operator=(const MsgBuffer&) = default;
 
+    MsgBuffer(const char* p, const std::size_t& len){
+        m_buffer.resize(len);
+        std::copy(p, p + len, m_buffer.data());
+        m_tail = len;
+        m_head = 0;
+    }
+
     std::size_t size(){
         return m_buffer.size();
     }

@@ -3,10 +3,14 @@
 //
 
 #include "msgbuffer.h"
-#include <arpa/inet.h>
 #include <cstring>
 #include <iterator>
 #include <iostream>
+#ifdef LINUX
+#include <arpa/inet.h>
+#else
+#include<Winsock2.h>
+#endif
 
 void MsgBuffer::append(const MsgBuffer& msg){
     adjust(available());
